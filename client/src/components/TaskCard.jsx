@@ -1,4 +1,4 @@
-import { Check, Circle, Pencil, Trash2, Calendar } from 'lucide-react';
+import { Pencil, Trash2, Calendar, Check, RotateCcw } from 'lucide-react';
 
 const TaskCard = ({ task, onEdit, onToggle, onDelete }) => {
   const isCompleted = task.status === 'completed';
@@ -8,74 +8,90 @@ const TaskCard = ({ task, onEdit, onToggle, onDelete }) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      day: 'numeric'
     });
   };
 
   const isOverdue = (dateStr) => {
     if (!dateStr) return false;
-    return new Date(dateStr) < new Date() && !isCompleted;
+    // Set hours to 23:59:59 to give users the full day to finish
+    const dueTime = new Date(dateStr).setHours(23, 59, 59, 999);
+    return dueTime < new Date().getTime() && !isCompleted;
   };
 
   return (
     <div
-      className={`task-card ${isCompleted ? 'completed' : ''}`}
+      className={`task-card ${task.status}`}
       id={`task-${task._id}`}
-      style={{ animationDelay: `${Math.random() * 0.1}s` }}
+      style={{ animationDelay: `${Math.random() * 0.15}s` }}
     >
-      <div className="task-card-header">
-        <div className="task-card-left">
+      <div className="task-card-main">
+        {/* Card Header */}
+        <div className="task-card-header">
           <h3 className="task-title">{task.title}</h3>
-          {task.description && (
-            <p className="task-description">{task.description}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="task-card-footer">
-        <div className="task-meta">
-          <span className={`task-badge ${task.status}`}>
-            {isCompleted ? (
-              <Check size={12} />
-            ) : (
-              <Circle size={12} />
-            )}
+          <span className={`status-badge ${task.status}`}>
             {task.status}
           </span>
+        </div>
+
+        {/* Card Description */}
+        {task.description && (
+          <p className="task-description">{task.description}</p>
+        )}
+      </div>
+
+      {/* Card Footer */}
+      <div className="task-card-footer">
+        <div className="task-meta">
           {task.dueDate && (
             <span className={`task-due ${isOverdue(task.dueDate) ? 'overdue' : ''}`}>
-              <Calendar size={12} />
+              <Calendar size={12} style={{ marginRight: '4px' }} />
               {isOverdue(task.dueDate) ? 'Overdue · ' : ''}
               {formatDate(task.dueDate)}
             </span>
           )}
         </div>
 
+        {/* Action Panel */}
         <div className="task-actions">
+          {/* Toggle Done/Undo Button */}
           <button
-            className="btn-icon"
+            className={`btn-toggle-status ${task.status}`}
             onClick={() => onToggle(task)}
-            title={isCompleted ? 'Mark as Pending' : 'Mark as Completed'}
+            title={isCompleted ? 'Mark task as pending' : 'Mark task as completed'}
             id={`toggle-${task._id}`}
           >
-            {isCompleted ? <Circle size={18} /> : <Check size={18} />}
+            {isCompleted ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <RotateCcw size={12} /> Undo
+              </span>
+            ) : (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Check size={12} /> Done
+              </span>
+            )}
           </button>
+
+          {/* Edit Button */}
           <button
-            className="btn-icon"
+            className="btn-square"
             onClick={() => onEdit(task)}
-            title="Edit task"
+            title="Edit task details"
             id={`edit-${task._id}`}
+            aria-label="Edit task"
           >
-            <Pencil size={18} />
+            <Pencil size={13} />
           </button>
+
+          {/* Delete Button */}
           <button
-            className="btn-icon danger"
+            className="btn-square danger"
             onClick={() => onDelete(task)}
             title="Delete task"
             id={`delete-${task._id}`}
+            aria-label="Delete task"
           >
-            <Trash2 size={18} />
+            <Trash2 size={13} />
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, ChevronDown } from 'lucide-react';
 
 const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
   const [formData, setFormData] = useState({
@@ -9,6 +9,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
     dueDate: ''
   });
   const [errors, setErrors] = useState({});
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const isEditing = !!task;
 
@@ -29,7 +30,19 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
       });
     }
     setErrors({});
+    setDropdownOpen(false);
   }, [task, isOpen]);
+
+  // Click outside to close custom select dropdown
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (dropdownOpen && !e.target.closest('.custom-select-container')) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [dropdownOpen]);
 
   const validate = () => {
     const newErrors = {};
@@ -109,7 +122,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
             {/* Description */}
             <div className="form-group">
               <label className="form-label" htmlFor="task-description">
-                Description <span style={{ color: 'var(--color-navy-400)', fontWeight: 400 }}>(optional)</span>
+                Description <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(optional)</span>
               </label>
               <textarea
                 id="task-description"
@@ -127,24 +140,62 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
               )}
             </div>
 
-            {/* Status */}
+            {/* Status Custom Dropdown Select */}
             <div className="form-group">
               <label className="form-label" htmlFor="task-status">Status</label>
-              <select
-                id="task-status"
-                className="form-select"
-                value={formData.status}
-                onChange={(e) => handleChange('status', e.target.value)}
-              >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
+              <div className="custom-select-container">
+                <button
+                  type="button"
+                  id="task-status"
+                  className="custom-select-trigger"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  aria-haspopup="listbox"
+                  aria-expanded={dropdownOpen}
+                >
+                  <span className="custom-select-value">
+                    <span className={`select-indicator-dot ${formData.status}`} />
+                    {formData.status === 'completed' ? 'Completed' : 'Pending'}
+                  </span>
+                  <ChevronDown size={16} />
+                </button>
+
+                {dropdownOpen && (
+                  <div className="custom-select-options" role="listbox">
+                    <button
+                      type="button"
+                      className={`custom-select-option ${formData.status === 'pending' ? 'selected' : ''}`}
+                      role="option"
+                      aria-selected={formData.status === 'pending'}
+                      onClick={() => {
+                        handleChange('status', 'pending');
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <span className="select-indicator-dot pending" />
+                      Pending
+                    </button>
+                    <button
+                      type="button"
+                      className={`custom-select-option ${formData.status === 'completed' ? 'selected' : ''}`}
+                      role="option"
+                      aria-selected={formData.status === 'completed'}
+                      onClick={() => {
+                        handleChange('status', 'completed');
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <span className="select-indicator-dot completed" />
+                      Completed
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Due Date */}
             <div className="form-group">
               <label className="form-label" htmlFor="task-due-date">
-                Due Date <span style={{ color: 'var(--color-navy-400)', fontWeight: 400 }}>(optional)</span>
+                Due Date <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(optional)</span>
               </label>
               <input
                 type="date"
