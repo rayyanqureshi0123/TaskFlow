@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, Mail, Lock } from 'lucide-react';
+import { AlertCircle, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Login = () => {
@@ -60,24 +60,29 @@ const Login = () => {
 
         {serverError && (
           <div className="alert-error" id="login-error">
-            <AlertCircle size={16} />
-            {serverError}
+            <AlertCircle size={18} />
+            <span>{serverError}</span>
           </div>
         )}
 
         <form className="auth-form" onSubmit={handleSubmit} id="login-form">
           <div className="form-group">
-            <label className="form-label" htmlFor="login-email">Email</label>
-            <input
-              type="email"
-              id="login-email"
-              className={`form-input ${errors.email ? 'error' : ''}`}
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              autoComplete="email"
-              autoFocus
-            />
+            <label className="form-label" htmlFor="login-email">Email Address</label>
+            <div className="auth-input-wrapper">
+              <input
+                type="email"
+                id="login-email"
+                className={`form-input ${errors.email ? 'error' : ''}`}
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                autoComplete="email"
+                autoFocus
+              />
+              <span className="auth-input-icon">
+                <Mail size={17} />
+              </span>
+            </div>
             {errors.email && (
               <span className="form-error">
                 <AlertCircle size={12} />
@@ -88,15 +93,20 @@ const Login = () => {
 
           <div className="form-group">
             <label className="form-label" htmlFor="login-password">Password</label>
-            <input
-              type="password"
-              id="login-password"
-              className={`form-input ${errors.password ? 'error' : ''}`}
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              autoComplete="current-password"
-            />
+            <div className="auth-input-wrapper">
+              <input
+                type="password"
+                id="login-password"
+                className={`form-input ${errors.password ? 'error' : ''}`}
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                autoComplete="current-password"
+              />
+              <span className="auth-input-icon">
+                <Lock size={17} />
+              </span>
+            </div>
             {errors.password && (
               <span className="form-error">
                 <AlertCircle size={12} />
@@ -112,7 +122,12 @@ const Login = () => {
             id="login-submit-btn"
           >
             {loading && <span className="spinner" />}
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : (
+              <>
+                Sign In
+                <ArrowRight size={17} />
+              </>
+            )}
           </button>
         </form>
 

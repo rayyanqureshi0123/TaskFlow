@@ -36,7 +36,6 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
     setDropdownOpen(false);
   }, [task, isOpen]);
 
-  // Click outside to close custom select dropdown
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (dropdownOpen && !e.target.closest('.custom-select-container')) {
@@ -78,7 +77,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error on change
+
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }

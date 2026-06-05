@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, User, Mail, Lock, KeyRound, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Register = () => {
@@ -77,24 +77,29 @@ const Register = () => {
 
         {serverError && (
           <div className="alert-error" id="register-error">
-            <AlertCircle size={16} />
-            {serverError}
+            <AlertCircle size={18} />
+            <span>{serverError}</span>
           </div>
         )}
 
         <form className="auth-form" onSubmit={handleSubmit} id="register-form">
           <div className="form-group">
             <label className="form-label" htmlFor="register-name">Full Name</label>
-            <input
-              type="text"
-              id="register-name"
-              className={`form-input ${errors.name ? 'error' : ''}`}
-              placeholder="John Doe"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              autoComplete="name"
-              autoFocus
-            />
+            <div className="auth-input-wrapper">
+              <input
+                type="text"
+                id="register-name"
+                className={`form-input ${errors.name ? 'error' : ''}`}
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                autoComplete="name"
+                autoFocus
+              />
+              <span className="auth-input-icon">
+                <User size={17} />
+              </span>
+            </div>
             {errors.name && (
               <span className="form-error">
                 <AlertCircle size={12} />
@@ -104,16 +109,21 @@ const Register = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="register-email">Email</label>
-            <input
-              type="email"
-              id="register-email"
-              className={`form-input ${errors.email ? 'error' : ''}`}
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              autoComplete="email"
-            />
+            <label className="form-label" htmlFor="register-email">Email Address</label>
+            <div className="auth-input-wrapper">
+              <input
+                type="email"
+                id="register-email"
+                className={`form-input ${errors.email ? 'error' : ''}`}
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                autoComplete="email"
+              />
+              <span className="auth-input-icon">
+                <Mail size={17} />
+              </span>
+            </div>
             {errors.email && (
               <span className="form-error">
                 <AlertCircle size={12} />
@@ -122,17 +132,24 @@ const Register = () => {
             )}
           </div>
 
+          <div className="auth-divider"><span>Secure your account</span></div>
+
           <div className="form-group">
             <label className="form-label" htmlFor="register-password">Password</label>
-            <input
-              type="password"
-              id="register-password"
-              className={`form-input ${errors.password ? 'error' : ''}`}
-              placeholder="At least 6 characters"
-              value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              autoComplete="new-password"
-            />
+            <div className="auth-input-wrapper">
+              <input
+                type="password"
+                id="register-password"
+                className={`form-input ${errors.password ? 'error' : ''}`}
+                placeholder="At least 6 characters"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                autoComplete="new-password"
+              />
+              <span className="auth-input-icon">
+                <Lock size={17} />
+              </span>
+            </div>
             {errors.password && (
               <span className="form-error">
                 <AlertCircle size={12} />
@@ -143,15 +160,20 @@ const Register = () => {
 
           <div className="form-group">
             <label className="form-label" htmlFor="register-confirm-password">Confirm Password</label>
-            <input
-              type="password"
-              id="register-confirm-password"
-              className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
-              placeholder="Re-enter your password"
-              value={formData.confirmPassword}
-              onChange={(e) => handleChange('confirmPassword', e.target.value)}
-              autoComplete="new-password"
-            />
+            <div className="auth-input-wrapper">
+              <input
+                type="password"
+                id="register-confirm-password"
+                className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
+                placeholder="Re-enter your password"
+                value={formData.confirmPassword}
+                onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                autoComplete="new-password"
+              />
+              <span className="auth-input-icon">
+                <KeyRound size={17} />
+              </span>
+            </div>
             {errors.confirmPassword && (
               <span className="form-error">
                 <AlertCircle size={12} />
@@ -167,7 +189,12 @@ const Register = () => {
             id="register-submit-btn"
           >
             {loading && <span className="spinner" />}
-            {loading ? 'Creating account...' : 'Create Account'}
+            {loading ? 'Creating account...' : (
+              <>
+                Create Account
+                <ArrowRight size={17} />
+              </>
+            )}
           </button>
         </form>
 

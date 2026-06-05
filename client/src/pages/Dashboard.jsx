@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, AlertTriangle, Search, CheckCircle2, Clock, Calendar } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import toast from 'react-hot-toast';
 import { tasksAPI, authAPI } from '../services/api';
 import Sidebar from '../components/Sidebar';
@@ -12,37 +13,29 @@ import { useAuth } from '../context/AuthContext';
 const Dashboard = () => {
   const { user, updateUser } = useAuth();
 
-  // Tab State ('dashboard' or 'profile')
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Task state
   const [tasks, setTasks] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Filter state
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Confirm delete state
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Stats
   const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0, today: 0 });
 
-  // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({ email: '', currentPassword: '', newPassword: '' });
   const [profileErrors, setProfileErrors] = useState({});
   const [updatingProfile, setUpdatingProfile] = useState(false);
 
-  // Initials helper
   const getInitials = (name) => {
     if (!name) return 'U';
     return name
@@ -53,10 +46,8 @@ const Dashboard = () => {
       .slice(0, 2);
   };
 
-  // Live Time state
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Track live clock
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -64,7 +55,6 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Format dates and time
   const formattedDate = currentTime.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -79,7 +69,6 @@ const Dashboard = () => {
     hour12: true
   });
 
-  // Scroll-Reveal Animation setup
   useEffect(() => {
     const timer = setTimeout(() => {
       const observer = new IntersectionObserver(
@@ -108,7 +97,6 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, [tasks, loading, activeTab]);
 
-  // Get dynamic time-based greeting
   const getTimeGreeting = () => {
     const hours = currentTime.getHours();
     if (hours < 12) return 'Good morning';
@@ -116,7 +104,6 @@ const Dashboard = () => {
     return 'Good evening';
   };
 
-  // Fetch tasks
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
@@ -147,7 +134,6 @@ const Dashboard = () => {
     }
   }, [page, statusFilter, search]);
 
-  // Fetch stats (unfiltered counts)
   const fetchStats = useCallback(async () => {
     try {
       const today = new Date();
@@ -181,7 +167,6 @@ const Dashboard = () => {
     fetchStats();
   }, [fetchStats]);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -189,12 +174,10 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Reset page on filter change
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
 
-  // Handle Sidebar Tab Swaps (reusing tab filter routes)
   const handleTabChange = (tabId) => {
     if (tabId === 'dashboard') {
       setActiveTab('dashboard');
@@ -213,7 +196,6 @@ const Dashboard = () => {
     }
   };
 
-  // Profile Edit Handlers
   const handleStartEditProfile = () => {
     setProfileForm({
       email: user?.email || '',
@@ -274,7 +256,6 @@ const Dashboard = () => {
     }
   };
 
-  // Handlers
   const handleAddTask = () => {
     setEditingTask(null);
     setModalOpen(true);
@@ -342,7 +323,6 @@ const Dashboard = () => {
   const hasFilters = search.trim() !== '' || statusFilter !== 'all';
   const timeGreeting = getTimeGreeting();
 
-  // Productivity Score Calculation
   const productivityPercentage = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   return (
@@ -537,6 +517,40 @@ const Dashboard = () => {
                     <div className="progress-track" title={`${productivityPercentage}% tasks completed`}>
                       <div className="progress-bar" style={{ width: `${productivityPercentage}%` }}></div>
                     </div>
+                  </div>
+
+                  {/* Recharts Productivity Chart */}
+                  <div className="profile-chart-container" style={{ marginTop: 'var(--space-8)', width: '100%', height: '250px' }}>
+                    <h3 style={{ fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-4)', color: 'var(--color-text-secondary)' }}>Task Distribution</h3>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Completed', value: stats.completed },
+                            { name: 'Pending', value: stats.pending }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          <Cell key="cell-0" fill="var(--color-green)" />
+                          <Cell key="cell-1" fill="var(--color-indigo)" />
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'var(--color-card)', 
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '8px',
+                            color: 'var(--color-text-primary)'
+                          }} 
+                          itemStyle={{ color: 'var(--color-text-primary)' }}
+                        />
+                        <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--color-text-secondary)' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
                 </>
               ) : (

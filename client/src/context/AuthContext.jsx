@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(sessionStorage.getItem('taskflow_token'));
   const [loading, setLoading] = useState(true);
 
-  // Verify token on mount
   useEffect(() => {
     const verifyToken = async () => {
       const savedToken = sessionStorage.getItem('taskflow_token');
@@ -30,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
         setToken(savedToken);
       } catch (error) {
-        // Token is invalid — clear it
+
         sessionStorage.removeItem('taskflow_token');
         sessionStorage.removeItem('taskflow_user');
         setUser(null);

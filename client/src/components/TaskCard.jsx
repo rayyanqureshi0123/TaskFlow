@@ -31,7 +31,7 @@ const TaskCard = ({ task, onEdit, onToggle, onDelete }) => {
       dueDateTime = new Date(dateStr);
       dueDateTime.setHours(hours, minutes, 0, 0);
     } else {
-      // Set hours to 23:59:59 to give users the full day to finish
+
       dueDateTime = new Date(dateStr);
       dueDateTime.setHours(23, 59, 59, 999);
     }

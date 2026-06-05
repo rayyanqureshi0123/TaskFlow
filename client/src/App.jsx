@@ -5,8 +5,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
 
-// Redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -54,7 +54,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
 
