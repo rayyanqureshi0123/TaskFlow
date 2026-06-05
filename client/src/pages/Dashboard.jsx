@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, AlertTriangle, Search, CheckCircle2, Clock, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { tasksAPI } from '../services/api';
+import { tasksAPI, authAPI } from '../services/api';
 import Sidebar from '../components/Sidebar';
 import TaskCard from '../components/TaskCard';
 import TaskModal from '../components/TaskModal';
@@ -10,7 +10,7 @@ import EmptyState from '../components/EmptyState';
 import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   // Tab State ('dashboard' or 'profile')
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -34,7 +34,24 @@ const Dashboard = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Stats
-  const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0, today: 0 });
+
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ email: '', currentPassword: '', newPassword: '' });
+  const [profileErrors, setProfileErrors] = useState({});
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  // Initials helper
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   // Live Time state
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -106,9 +123,18 @@ const Dashboard = () => {
       const params = {
         page,
         limit: 8, // Fit nicely in 2-column grid
-        status: statusFilter !== 'all' ? statusFilter : undefined,
+        status: statusFilter !== 'all' && statusFilter !== 'today' ? statusFilter : undefined,
         search: search.trim() || undefined
       };
+
+      if (statusFilter === 'today') {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        params.dueDate = `${year}-${month}-${day}`;
+        params.status = 'pending';
+      }
 
       const { data } = await tasksAPI.getAll(params);
       setTasks(data.tasks);
@@ -124,15 +150,23 @@ const Dashboard = () => {
   // Fetch stats (unfiltered counts)
   const fetchStats = useCallback(async () => {
     try {
-      const [allRes, pendingRes, completedRes] = await Promise.all([
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${day}`;
+
+      const [allRes, pendingRes, completedRes, todayRes] = await Promise.all([
         tasksAPI.getAll({ limit: 1 }),
         tasksAPI.getAll({ limit: 1, status: 'pending' }),
-        tasksAPI.getAll({ limit: 1, status: 'completed' })
+        tasksAPI.getAll({ limit: 1, status: 'completed' }),
+        tasksAPI.getAll({ limit: 1, status: 'pending', dueDate: todayStr })
       ]);
       setStats({
         total: allRes.data.pagination.total,
         pending: pendingRes.data.pagination.total,
-        completed: completedRes.data.pagination.total
+        completed: completedRes.data.pagination.total,
+        today: todayRes.data.pagination.total
       });
     } catch (error) {
       console.error('Fetch stats error:', error);
@@ -165,6 +199,9 @@ const Dashboard = () => {
     if (tabId === 'dashboard') {
       setActiveTab('dashboard');
       setStatusFilter('all');
+    } else if (tabId === 'today') {
+      setActiveTab('dashboard');
+      setStatusFilter('today');
     } else if (tabId === 'completed') {
       setActiveTab('dashboard');
       setStatusFilter('completed');
@@ -173,6 +210,67 @@ const Dashboard = () => {
       setStatusFilter('pending');
     } else if (tabId === 'profile') {
       setActiveTab('profile');
+    }
+  };
+
+  // Profile Edit Handlers
+  const handleStartEditProfile = () => {
+    setProfileForm({
+      email: user?.email || '',
+      currentPassword: '',
+      newPassword: ''
+    });
+    setProfileErrors({});
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileErrors({});
+
+    const errs = {};
+    if (!profileForm.email.trim()) {
+      errs.email = 'Email is required.';
+    }
+    if (!profileForm.currentPassword) {
+      errs.currentPassword = 'Current password is required.';
+    }
+    if (profileForm.newPassword && profileForm.newPassword.length < 6) {
+      errs.newPassword = 'New password must be at least 6 characters.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setProfileErrors(errs);
+      return;
+    }
+
+    setUpdatingProfile(true);
+    try {
+      const payload = {
+        email: profileForm.email.trim(),
+        currentPassword: profileForm.currentPassword,
+        newPassword: profileForm.newPassword || undefined
+      };
+
+      const { data } = await authAPI.updateProfile(payload);
+      toast.success(data.message || 'Profile updated successfully!');
+
+      if (updateUser) {
+        updateUser(data.user);
+      }
+      setIsEditingProfile(false);
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to update profile.';
+      toast.error(msg);
+      if (error.response?.data?.errors) {
+        const validationErrs = {};
+        error.response.data.errors.forEach(err => {
+          validationErrs[err.param || err.path] = err.msg;
+        });
+        setProfileErrors(validationErrs);
+      }
+    } finally {
+      setUpdatingProfile(false);
     }
   };
 
@@ -302,6 +400,10 @@ const Dashboard = () => {
                 <div className="stat-label">Total Tasks</div>
                 <div className="stat-value">{stats.total}</div>
               </div>
+              <div className="stat-card today" onClick={() => setStatusFilter('today')} style={{ cursor: 'pointer' }}>
+                <div className="stat-label">Today's Tasks</div>
+                <div className="stat-value">{stats.today}</div>
+              </div>
               <div className="stat-card pending" onClick={() => setStatusFilter('pending')} style={{ cursor: 'pointer' }}>
                 <div className="stat-label">Pending</div>
                 <div className="stat-value">{stats.pending}</div>
@@ -321,6 +423,13 @@ const Dashboard = () => {
                   id="filter-pill-all"
                 >
                   All
+                </button>
+                <button
+                  className={`filter-tab ${statusFilter === 'today' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('today')}
+                  id="filter-pill-today"
+                >
+                  Today
                 </button>
                 <button
                   className={`filter-tab ${statusFilter === 'pending' ? 'active' : ''}`}
@@ -383,42 +492,135 @@ const Dashboard = () => {
             </div>
 
             <div className="profile-card">
-              <div className="profile-header">
-                <div className="profile-avatar-large">
-                  {getInitials(user?.name)}
-                </div>
-                <div className="profile-user-details">
-                  <h2>{user?.name || 'User'}</h2>
-                  <p>{user?.email || ''}</p>
-                </div>
-              </div>
+              {!isEditingProfile ? (
+                <>
+                  <div className="profile-header">
+                    <div className="profile-avatar-large">
+                      {getInitials(user?.name)}
+                    </div>
+                    <div className="profile-user-details">
+                      <h2>{user?.name || 'User'}</h2>
+                      <p>{user?.email || ''}</p>
+                    </div>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleStartEditProfile}
+                      style={{ marginLeft: 'auto' }}
+                      id="edit-profile-btn"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
 
-              {/* Productivity Stats Grid */}
-              <div className="profile-stats-grid">
-                <div className="profile-stat-box">
-                  <div className="profile-stat-num total">{stats.total}</div>
-                  <div className="profile-stat-desc">Total Created</div>
-                </div>
-                <div className="profile-stat-box">
-                  <div className="profile-stat-num pending">{stats.pending}</div>
-                  <div className="profile-stat-desc">Tasks Pending</div>
-                </div>
-                <div className="profile-stat-box">
-                  <div className="profile-stat-num completed">{stats.completed}</div>
-                  <div className="profile-stat-desc">Tasks Completed</div>
-                </div>
-              </div>
+                  {/* Productivity Stats Grid */}
+                  <div className="profile-stats-grid">
+                    <div className="profile-stat-box">
+                      <div className="profile-stat-num total">{stats.total}</div>
+                      <div className="profile-stat-desc">Total Created</div>
+                    </div>
+                    <div className="profile-stat-box">
+                      <div className="profile-stat-num pending">{stats.pending}</div>
+                      <div className="profile-stat-desc">Tasks Pending</div>
+                    </div>
+                    <div className="profile-stat-box">
+                      <div className="profile-stat-num completed">{stats.completed}</div>
+                      <div className="profile-stat-desc">Tasks Completed</div>
+                    </div>
+                  </div>
 
-              {/* Productivity rate */}
-              <div className="profile-productivity">
-                <div className="productivity-header">
-                  <span>Productivity Score</span>
-                  <span className="productivity-percentage">{productivityPercentage}%</span>
-                </div>
-                <div className="progress-track" title={`${productivityPercentage}% tasks completed`}>
-                  <div className="progress-bar" style={{ width: `${productivityPercentage}%` }}></div>
-                </div>
-              </div>
+                  {/* Productivity rate */}
+                  <div className="profile-productivity">
+                    <div className="productivity-header">
+                      <span>Productivity Score</span>
+                      <span className="productivity-percentage">{productivityPercentage}%</span>
+                    </div>
+                    <div className="progress-track" title={`${productivityPercentage}% tasks completed`}>
+                      <div className="progress-bar" style={{ width: `${productivityPercentage}%` }}></div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <form onSubmit={handleSaveProfile} className="profile-edit-form">
+                  <div className="profile-edit-header">
+                    <h2>Edit Account Details</h2>
+                    <p className="profile-edit-subtitle">Update email address and change password securely.</p>
+                  </div>
+
+                  <div className="profile-form-body">
+                    {/* Email */}
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="edit-email">Email Address</label>
+                      <input
+                        type="email"
+                        id="edit-email"
+                        className={`form-input ${profileErrors.email ? 'error' : ''}`}
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                      />
+                      {profileErrors.email && (
+                        <span className="form-error">
+                          <AlertTriangle size={12} /> {profileErrors.email}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Current Password */}
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="current-password">Current Password (Required)</label>
+                      <input
+                        type="password"
+                        id="current-password"
+                        className={`form-input ${profileErrors.currentPassword ? 'error' : ''}`}
+                        placeholder="Enter current password to verify identity"
+                        value={profileForm.currentPassword}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                      />
+                      {profileErrors.currentPassword && (
+                        <span className="form-error">
+                          <AlertTriangle size={12} /> {profileErrors.currentPassword}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* New Password */}
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="new-password">New Password (Optional)</label>
+                      <input
+                        type="password"
+                        id="new-password"
+                        className={`form-input ${profileErrors.newPassword ? 'error' : ''}`}
+                        placeholder="Enter at least 6 characters if you want to change it"
+                        value={profileForm.newPassword}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                      />
+                      {profileErrors.newPassword && (
+                        <span className="form-error">
+                          <AlertTriangle size={12} /> {profileErrors.newPassword}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="profile-form-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setIsEditingProfile(false)}
+                      disabled={updatingProfile}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={updatingProfile}
+                    >
+                      {updatingProfile && <span className="spinner" />}
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}

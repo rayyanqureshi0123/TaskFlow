@@ -6,12 +6,24 @@ const Task = require('../models/Task');
 // @access  Private
 exports.getTasks = async (req, res) => {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, page = 1, limit = 10, dueDate } = req.query;
     const query = { userId: req.userId };
 
     // Filter by status
     if (status && status !== 'all') {
       query.status = status;
+    }
+
+    // Filter by dueDate
+    if (dueDate) {
+      const dateVal = new Date(dueDate);
+      if (!isNaN(dateVal.getTime())) {
+        const startOfDay = new Date(dueDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(dueDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        query.dueDate = { $gte: startOfDay, $lte: endOfDay };
+      }
     }
 
     // Search by title
@@ -60,13 +72,14 @@ exports.createTask = async (req, res) => {
       });
     }
 
-    const { title, description, status, dueDate } = req.body;
+    const { title, description, status, dueDate, dueTime } = req.body;
 
     const task = await Task.create({
       title,
       description: description || '',
       status: status || 'pending',
       dueDate: dueDate || null,
+      dueTime: dueTime || null,
       userId: req.userId
     });
 
@@ -98,12 +111,13 @@ exports.updateTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found.' });
     }
 
-    const { title, description, status, dueDate } = req.body;
+    const { title, description, status, dueDate, dueTime } = req.body;
 
     if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
     if (status !== undefined) task.status = status;
     if (dueDate !== undefined) task.dueDate = dueDate;
+    if (dueTime !== undefined) task.dueTime = dueTime;
 
     await task.save();
 

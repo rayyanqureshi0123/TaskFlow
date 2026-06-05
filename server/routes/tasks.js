@@ -27,7 +27,10 @@ router.post(
       .isIn(['pending', 'completed']).withMessage('Status must be pending or completed.'),
     body('dueDate')
       .optional({ nullable: true })
-      .isISO8601().withMessage('Due date must be a valid date.')
+      .isISO8601().withMessage('Due date must be a valid date.'),
+    body('dueTime')
+      .optional({ nullable: true })
+      .trim()
   ],
   taskController.createTask
 );
@@ -50,7 +53,10 @@ router.put(
       .isIn(['pending', 'completed']).withMessage('Status must be pending or completed.'),
     body('dueDate')
       .optional({ nullable: true })
-      .isISO8601().withMessage('Due date must be a valid date.')
+      .isISO8601().withMessage('Due date must be a valid date.'),
+    body('dueTime')
+      .optional({ nullable: true })
+      .trim()
   ],
   taskController.updateTask
 );

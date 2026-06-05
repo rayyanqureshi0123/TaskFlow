@@ -40,4 +40,22 @@ router.post(
 // @route   GET /api/auth/me
 router.get('/me', auth, authController.getMe);
 
+// @route   PUT /api/auth/profile
+router.put(
+  '/profile',
+  auth,
+  [
+    body('email')
+      .optional()
+      .trim()
+      .isEmail().withMessage('Please enter a valid email address.'),
+    body('newPassword')
+      .optional()
+      .isLength({ min: 6 }).withMessage('New password must be at least 6 characters.'),
+    body('currentPassword')
+      .notEmpty().withMessage('Current password is required.')
+  ],
+  authController.updateProfile
+);
+
 module.exports = router;

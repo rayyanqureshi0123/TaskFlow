@@ -6,7 +6,8 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
     title: '',
     description: '',
     status: 'pending',
-    dueDate: ''
+    dueDate: '',
+    dueTime: ''
   });
   const [errors, setErrors] = useState({});
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -19,14 +20,16 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
         title: task.title || '',
         description: task.description || '',
         status: task.status || 'pending',
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''
+        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+        dueTime: task.dueTime || ''
       });
     } else {
       setFormData({
         title: '',
         description: '',
         status: 'pending',
-        dueDate: ''
+        dueDate: '',
+        dueTime: ''
       });
     }
     setErrors({});
@@ -66,7 +69,8 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
       title: formData.title.trim(),
       description: formData.description.trim(),
       status: formData.status,
-      dueDate: formData.dueDate || null
+      dueDate: formData.dueDate || null,
+      dueTime: formData.dueTime || null
     };
 
     onSave(payload);
@@ -192,18 +196,49 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
               </div>
             </div>
 
-            {/* Due Date */}
-            <div className="form-group">
-              <label className="form-label" htmlFor="task-due-date">
-                Due Date <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(optional)</span>
-              </label>
-              <input
-                type="date"
-                id="task-due-date"
-                className="form-input"
-                value={formData.dueDate}
-                onChange={(e) => handleChange('dueDate', e.target.value)}
-              />
+            {/* Due Date & Time (Row layout) */}
+            <div className="form-row">
+              <div className="form-group flex-1">
+                <label className="form-label" htmlFor="task-due-date">
+                  Due Date <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(optional)</span>
+                </label>
+                <input
+                  type="date"
+                  id="task-due-date"
+                  className="form-input"
+                  value={formData.dueDate}
+                  onChange={(e) => handleChange('dueDate', e.target.value)}
+                />
+              </div>
+              <div className="form-group flex-1">
+                <label className="form-label" htmlFor="task-due-time">
+                  Due Time <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(optional)</span>
+                </label>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="time"
+                    id="task-due-time"
+                    className="form-input"
+                    value={formData.dueTime}
+                    onChange={(e) => handleChange('dueTime', e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  {/* Visual AM/PM indicator for clarity */}
+                  {formData.dueTime && (
+                    <span className="ampm-indicator" style={{
+                      padding: '8px 12px',
+                      backgroundColor: 'var(--bg-secondary)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color)',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)'
+                    }}>
+                      {parseInt(formData.dueTime.split(':')[0], 10) >= 12 ? 'PM' : 'AM'}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

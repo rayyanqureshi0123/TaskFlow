@@ -13,13 +13,13 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('taskflow_token'));
+  const [token, setToken] = useState(sessionStorage.getItem('taskflow_token'));
   const [loading, setLoading] = useState(true);
 
   // Verify token on mount
   useEffect(() => {
     const verifyToken = async () => {
-      const savedToken = localStorage.getItem('taskflow_token');
+      const savedToken = sessionStorage.getItem('taskflow_token');
       if (!savedToken) {
         setLoading(false);
         return;
@@ -31,8 +31,8 @@ export const AuthProvider = ({ children }) => {
         setToken(savedToken);
       } catch (error) {
         // Token is invalid — clear it
-        localStorage.removeItem('taskflow_token');
-        localStorage.removeItem('taskflow_user');
+        sessionStorage.removeItem('taskflow_token');
+        sessionStorage.removeItem('taskflow_user');
         setUser(null);
         setToken(null);
       } finally {
@@ -45,8 +45,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     const { data } = await authAPI.login({ email, password });
-    localStorage.setItem('taskflow_token', data.token);
-    localStorage.setItem('taskflow_user', JSON.stringify(data.user));
+    sessionStorage.setItem('taskflow_token', data.token);
+    sessionStorage.setItem('taskflow_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -54,18 +54,23 @@ export const AuthProvider = ({ children }) => {
 
   const register = useCallback(async (name, email, password) => {
     const { data } = await authAPI.register({ name, email, password });
-    localStorage.setItem('taskflow_token', data.token);
-    localStorage.setItem('taskflow_user', JSON.stringify(data.user));
+    sessionStorage.setItem('taskflow_token', data.token);
+    sessionStorage.setItem('taskflow_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('taskflow_token');
-    localStorage.removeItem('taskflow_user');
+    sessionStorage.removeItem('taskflow_token');
+    sessionStorage.removeItem('taskflow_user');
     setToken(null);
     setUser(null);
+  }, []);
+
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser);
+    sessionStorage.setItem('taskflow_user', JSON.stringify(updatedUser));
   }, []);
 
   const value = {
@@ -75,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: !!token && !!user
   };
 

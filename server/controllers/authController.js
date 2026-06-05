@@ -99,3 +99,56 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: 'Server error. Please try again.' });
   }
 };
+
+// @route   PUT /api/auth/profile
+// @desc    Update user email and/or password
+// @access  Private
+exports.updateProfile = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: errors.array()[0].msg,
+        errors: errors.array()
+      });
+    }
+
+    const { email, newPassword, currentPassword } = req.body;
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect.' });
+    }
+
+    // Update email if provided and different
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'This email is already in use.' });
+      }
+      user.email = email;
+    }
+
+    // Update password if provided
+    if (newPassword) {
+      user.password = newPassword;
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully!',
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('UpdateProfile error:', error);
+    res.status(500).json({ message: 'Server error. Please try again.' });
+  }
+};
+

@@ -12,11 +12,30 @@ const TaskCard = ({ task, onEdit, onToggle, onDelete }) => {
     });
   };
 
-  const isOverdue = (dateStr) => {
+  const formatTime = (timeStr) => {
+    if (!timeStr) return null;
+    const [hoursStr, minutesStr] = timeStr.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    return `${formattedHours}:${formattedMinutes} ${ampm}`;
+  };
+
+  const isOverdue = (dateStr, timeStr) => {
     if (!dateStr) return false;
-    // Set hours to 23:59:59 to give users the full day to finish
-    const dueTime = new Date(dateStr).setHours(23, 59, 59, 999);
-    return dueTime < new Date().getTime() && !isCompleted;
+    let dueDateTime;
+    if (timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      dueDateTime = new Date(dateStr);
+      dueDateTime.setHours(hours, minutes, 0, 0);
+    } else {
+      // Set hours to 23:59:59 to give users the full day to finish
+      dueDateTime = new Date(dateStr);
+      dueDateTime.setHours(23, 59, 59, 999);
+    }
+    return dueDateTime.getTime() < new Date().getTime() && !isCompleted;
   };
 
   return (
@@ -44,10 +63,11 @@ const TaskCard = ({ task, onEdit, onToggle, onDelete }) => {
       <div className="task-card-footer">
         <div className="task-meta">
           {task.dueDate && (
-            <span className={`task-due ${isOverdue(task.dueDate) ? 'overdue' : ''}`}>
+            <span className={`task-due ${isOverdue(task.dueDate, task.dueTime) ? 'overdue' : ''}`}>
               <Calendar size={12} style={{ marginRight: '4px' }} />
-              {isOverdue(task.dueDate) ? 'Overdue · ' : ''}
+              {isOverdue(task.dueDate, task.dueTime) ? 'Overdue · ' : ''}
               {formatDate(task.dueDate)}
+              {task.dueTime && ` at ${formatTime(task.dueTime)}`}
             </span>
           )}
         </div>

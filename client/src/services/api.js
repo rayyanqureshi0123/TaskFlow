@@ -12,7 +12,7 @@ const api = axios.create({
 // Attach JWT token to every request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('taskflow_token');
+    const token = sessionStorage.getItem('taskflow_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,8 +26,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('taskflow_token');
-      localStorage.removeItem('taskflow_user');
+      sessionStorage.removeItem('taskflow_token');
+      sessionStorage.removeItem('taskflow_user');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -38,7 +38,8 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  getMe: () => api.get('/auth/me')
+  getMe: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data)
 };
 
 // Tasks API

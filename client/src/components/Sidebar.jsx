@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, CheckSquare, Clock, User, LogOut, ListChecks, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Clock, User, LogOut, ListChecks, AlertTriangle, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,6 +25,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
 
   const NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'today', label: 'Today', icon: Calendar },
     { id: 'completed', label: 'Completed', icon: CheckSquare },
     { id: 'pending', label: 'Pending', icon: Clock },
     { id: 'profile', label: 'Profile', icon: User }
