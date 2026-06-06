@@ -4,6 +4,24 @@ A high-performance, full-stack Task Management web application designed for the 
 
 ---
 
+## 📋 Assignment Overview & Requirements
+
+**Objective:** Design and develop a Task Management Web Application using the MERN stack.
+
+### Core Requirements
+- **Frontend (React.js):** Responsive UI, Functional components/hooks, Pages (Login, Register, Dashboard), Form validation, API integration. Task operations (Add, Edit, Delete, Toggle status).
+- **Backend (Node.js + Express.js):** RESTful APIs, JWT Authentication, Protected routes via middleware.
+- **Database (MongoDB):** 
+  - User Schema: name, email, password
+  - Task Schema: title, description, status, userId
+- **Deliverables:** GitHub repository, README setup instructions, Screenshots/Demo.
+
+### Bonus Requirements
+1. Search and filter
+2. Pagination
+3. Deployment
+
+---
 ## 🌟 Key Highlights & Bonus Criteria Achieved
 
 To demonstrate technical capability and creativity, the following advanced features were implemented in addition to the core assignment scope:
