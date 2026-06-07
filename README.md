@@ -2,6 +2,10 @@
 
 A high-performance, full-stack Task Management web application designed for the MERN Stack Internship Assignment. Handcrafted with a premium glassmorphic dark theme, secure authentication, real-time productivity metrics, and robust data management.
 
+### 🌐 Live Demo
+- **Frontend (Vercel):** [https://task-flow-kappa-nine.vercel.app](https://task-flow-kappa-nine.vercel.app)
+- **Backend API (Render):** [https://taskflow-3gc2.onrender.com/api/health](https://taskflow-3gc2.onrender.com/api/health)
+
 ---
 
 ## 📋 Assignment Overview & Requirements
