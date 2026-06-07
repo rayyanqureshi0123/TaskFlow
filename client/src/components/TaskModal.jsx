@@ -226,9 +226,9 @@ const TaskModal = ({ isOpen, onClose, onSave, task, loading }) => {
                   {formData.dueTime && (
                     <span className="ampm-indicator" style={{
                       padding: '8px 12px',
-                      backgroundColor: 'var(--bg-secondary)',
+                      backgroundColor: 'var(--color-sidebar)',
                       borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
+                      border: '1px solid var(--color-border)',
                       fontSize: '14px',
                       fontWeight: 500,
                       color: 'var(--color-text-primary)'

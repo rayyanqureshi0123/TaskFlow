@@ -52,7 +52,7 @@ const Register = () => {
     try {
       await register(formData.name.trim(), formData.email, formData.password);
       toast.success('Account created! Welcome to TaskFlow.');
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
       setServerError(message);

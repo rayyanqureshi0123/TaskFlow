@@ -9,9 +9,11 @@ import TaskModal from '../components/TaskModal';
 import Pagination from '../components/Pagination';
 import EmptyState from '../components/EmptyState';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -28,6 +30,7 @@ const Dashboard = () => {
   const [saving, setSaving] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0, today: 0 });
 
@@ -35,6 +38,11 @@ const Dashboard = () => {
   const [profileForm, setProfileForm] = useState({ email: '', currentPassword: '', newPassword: '' });
   const [profileErrors, setProfileErrors] = useState({});
   const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -482,14 +490,22 @@ const Dashboard = () => {
                       <h2>{user?.name || 'User'}</h2>
                       <p>{user?.email || ''}</p>
                     </div>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={handleStartEditProfile}
-                      style={{ marginLeft: 'auto' }}
-                      id="edit-profile-btn"
-                    >
-                      Edit Profile
-                    </button>
+                    <div className="profile-actions-wrapper">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={handleStartEditProfile}
+                        id="edit-profile-btn"
+                      >
+                        Edit Profile
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => setShowLogoutConfirm(true)}
+                        id="profile-logout-btn"
+                      >
+                        Logout
+                      </button>
+                    </div>
                   </div>
 
                   {/* Productivity Stats Grid */}
@@ -672,6 +688,35 @@ const Dashboard = () => {
                 id="delete-confirm-btn"
               >
                 Delete Task
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="confirm-overlay" onClick={() => setShowLogoutConfirm(false)} id="profile-logout-confirm-overlay">
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-dialog-icon">
+              <AlertTriangle size={24} />
+            </div>
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to log out of TaskFlow? You will need to sign back in to access your workspace.</p>
+            <div className="confirm-dialog-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowLogoutConfirm(false)}
+                id="profile-logout-cancel-btn"
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleLogout}
+                id="profile-logout-confirm-btn"
+              >
+                Confirm Logout
               </button>
             </div>
           </div>
